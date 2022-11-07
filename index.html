@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ToDo Lists</title>
+    <link rel="icon" href="https://i.pinimg.com/564x/1f/3f/4c/1f3f4ce973d946578567f190e2773709.jpg" type="image/icon type">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap');
+
+      body {
+        font-family: 'Nunito Sans', sans-serif;
+      }
+    </style>
+
+    <!-- Firebase & Firestore Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+      // Firebase API Key
+      const firebaseConfig = {
+        apiKey: 'AIzaSyDEFkHv2dBtQciHXDTE_Q2BqDCIFUtevoc',
+        authDomain: 'to-do-list-phiravit.firebaseapp.com',
+        projectId: 'to-do-list-phiravit',
+        storageBucket: 'to-do-list-phiravit.appspot.com',
+        messagingSenderId: '309187870933',
+        appId: '1:309187870933:web:fb7447bf4d32a1981fe25c',
+        measurementId: 'G-DFF65046WL',
+      };
+
+      // STEP 3 : Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+  </head>
+
+  <body>
+    <div>
+      <div class="border-4 border-[#183153] m-2 pb-4 lg:m-4">
+        <h1
+          class="
+            text-xl text-center
+            font-extrabold
+            m-8
+            text-[#183153]
+            lg:text-2xl
+          "
+        >
+        <span class="text-[#3061A7]">To Do Lists</span>
+        </h1>
+
+        <div class="my-14 mb-0 flex justify-center">
+          <div class="w-10/12 text-center">
+            <input
+              type="text"
+              id="newToDo"
+              placeholder="ทำอะไรอีกดีน้าา..."
+              id="new-item-text"
+              class="border-4 rounded-lg p-3 w-full lg:w-10/12"
+            />
+            <br /><br />
+            <button
+              type="button"
+              class="
+                rounded-lg
+                p-3
+                w-full
+                bg-[#183153]
+                text-white text-extrabold
+                lg:w-10/12
+              "
+              onclick="createToDo()"
+            >
+              เพิ่มรายการใหม่
+            </button>
+          </div>
+        </div>
+
+        <div class="my-10 flex justify-center m-auto">
+          <div class="w-10/12">
+            <h1 class="text-lg text-center font-bold text-[#183153] lg:text-xl">
+              --- ลิสต์รายการทีอยากทำ---
+            </h1>
+          </div>
+        </div>
+
+        <div class="container flex flex-col items-center mx-auto">
+          <div class="relative overflow-x-auto shadow-md mt-8 w-10/12">
+            <table class="w-full text-sm text-gray-500">
+              <tbody id="show"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <h1 class="text-lg text-center font-bold m-4 ml-0 mt-14">
+          <span class="text-[#183153]">By </span><br />
+          <span class="text-[#FEC92A] font-extrabold">Phiravit Imsucart</span>
+        </h1>
+
+          <!-- <div class="flex gap-6 justify-center m-auto">
+            <img
+              src=""
+              alt="XXXX"
+              class="rounded-full"
+              width="50px"
+            />
+            <img
+              src=""
+              alt="XXXX"
+              width="50px"
+            />
+            <img
+              src=""
+              alt="XXXX"
+              width="50px"
+            />
+          </div> -->
+      </div>
+    </div>
+
+    <script>
+        // Read ToDos Function
+        let todoCollection = db.collection('todo');
+        window.onload = function () {
+            getToDos();
+        };
+
+        function getToDos() {
+            todoCollection.onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        addTableData(change.doc);
+                    }
+                });
+            });
+        }
+      // Create New ToDo Function
+      function createToDo() {
+            let newToDo = document.querySelector('#newToDo').value;
+            todoCollection
+                .add({
+                    content: newToDo,
+                })
+                .then((docRef) => {
+                    console.log('Added new todo to database!');
+                })
+                .catch((error) => console.log(error));
+            document.querySelector('#newToDo').value = '';
+        }
+
+        // Delete ToDo Function
+        function deleteToDo(id) {
+            if (confirm('แน่ใจไหมว่าต้องการลบ') === true) {
+                todoCollection
+                    .doc(id)
+                    .delete()
+                    .then(() => {
+                        console.log('ลบเเล้ว');
+                        document.querySelector('#show').innerHTML = '';
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+                alert('ลบข้อมูลเสร็จสิ้น');
+            }
+        }
+
+      function addTableData(doc) {
+        let show = document.querySelector('#show');
+        show.innerHTML += `
+                        <tr class="bg-white border-b">
+                            <th scope="row" class="px-6 py-4 text-left font-bold text-[#183153] text-base whitespace-nowrap">
+                                ${doc.data().content}
+                            </th>
+                            <td class="px-6 py-4 text-right">
+                                <a href="#" class="font-bold text-red-600 hover:underline text-base text-right" onclick="deleteToDo('${
+                                  doc.id
+                                }')">DELETE</a>
+                            </td>
+                        </tr>
+                    `;
+      }
+    </script>
+  </body>
+</html>
